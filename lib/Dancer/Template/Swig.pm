@@ -14,8 +14,21 @@ use Dancer::Exception qw(:all);
 
 use base 'Dancer::Template::Abstract';
 
-our $swig = Template::Swig->new;
-my $compiled_templates = {};
+my $views_path = setting('views');
+
+our $swig = Template::Swig->new(
+	template_dir => $views_path,
+	extends_callback => sub {
+		my ($filename, $encoding) = @_;
+		if ( -e $filename ) {
+			my $template = read_file_content($filename);
+			$template =~ /(.*)/s; # Untaint
+			return $1;
+		} else {
+			die "Unable to locate $filename";
+		}
+	}
+);
 
 sub init {
 
